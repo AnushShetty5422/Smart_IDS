@@ -1,0 +1,15 @@
+fastapi
+uvicorn
+scikit-learn
+pandas
+numpy
+requests
+mlflow
+psycopg2-binary
+transformers
+sentence-transformers
+alibi-detect
+python-multipart
+joblib
+sqlalchemy
+python-dotenv
