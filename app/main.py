@@ -121,9 +121,16 @@ def get_stats(db: Session = Depends(get_db)):
         {"name": "Low", "value": low_alerts, "color": "#00FF9D"},
     ]
     
-    # Get recent raw logs for the Terminal window
-    recent_logs_db = db.query(DBLogEntry).order_by(desc(DBLogEntry.id)).limit(10).all()
-    recent_logs = [{"timestamp": log.timestamp, "username": log.username, "ip_address": log.ip_address} for log in recent_logs_db]
+    # Get recent raw logs for the Network Monitor
+    recent_logs_db = db.query(DBLogEntry).order_by(desc(DBLogEntry.id)).limit(50).all()
+    recent_logs = [{"timestamp": log.timestamp, "username": log.username, "ip_address": log.ip_address, "query_count": log.query_count, "query_type": log.query_type, "location": log.location, "failed_logins": log.failed_logins} for log in recent_logs_db]
+    
+    # Calculate Geo Distribution
+    location_counts = {}
+    for log in recent_logs_db:
+        if log.location:
+            location_counts[log.location] = location_counts.get(log.location, 0) + 1
+    geo_distribution = [{"name": k, "value": v} for k, v in sorted(location_counts.items(), key=lambda item: item[1], reverse=True)]
     
     return {
         "total_logs": total_logs,
@@ -132,5 +139,6 @@ def get_stats(db: Session = Depends(get_db)):
         "total_alerts": total_alerts,
         "top_targets": top_users,
         "severity_distribution": [item for item in severity_dist if item["value"] > 0],
-        "recent_logs": recent_logs
+        "recent_logs": recent_logs,
+        "geo_distribution": geo_distribution
     }

@@ -13,3 +13,4 @@ class LogEntry(BaseModel):
     download_size_mb: float
     location: str
     privilege_change: bool
+    target_table: str = "public_data"

@@ -45,6 +45,11 @@ class DetectionEngine:
             alerts.append("High Query Volume (Possible Automated Extraction)")
             rule_score += 30
             
+        # Rule 5: Honeypot Breach
+        if getattr(log, "target_table", "") == "secret_payroll_data":
+            alerts.append("HONEYPOT BREACH DETECTED (Critical Alert)")
+            rule_score += 100
+            
         return alerts, rule_score
 
     def evaluate_ml(self, log):

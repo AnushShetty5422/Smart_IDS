@@ -20,7 +20,8 @@ def generate_normal_log():
         "failed_logins": random.choices([0, 1, 2], weights=[0.8, 0.15, 0.05])[0],
         "download_size_mb": round(random.uniform(0.1, 5.0), 2),
         "location": random.choice(LOCATIONS),
-        "privilege_change": False
+        "privilege_change": False,
+        "target_table": random.choice(["users", "inventory", "transactions", "public_data"])
     }
 
 def generate_attack_log(attack_type):
@@ -33,6 +34,9 @@ def generate_attack_log(attack_type):
     elif attack_type == "sql_injection":
         log["query_type"] = "DROP"
         log["failed_logins"] = random.randint(1, 5)
+    elif attack_type == "honeypot_breach":
+        log["target_table"] = "secret_payroll_data"
+        log["query_type"] = "SELECT"
     return log
 
 def run_simulation(interval=2):
@@ -41,7 +45,7 @@ def run_simulation(interval=2):
         while True:
             # 10% chance of generating an attack
             if random.random() < 0.1:
-                attack_type = random.choice(["brute_force", "data_exfiltration", "sql_injection"])
+                attack_type = random.choice(["brute_force", "data_exfiltration", "sql_injection", "honeypot_breach"])
                 log = generate_attack_log(attack_type)
                 print(f"Generated ATTACK log: {attack_type}")
             else:
