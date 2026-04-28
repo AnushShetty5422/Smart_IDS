@@ -174,7 +174,7 @@ function App() {
                           <div>
                             <div className="threat-target">Target: {alert.username}</div>
                             <div className="threat-meta">
-                              <Clock size={12}/> {new Date(alert.timestamp).toLocaleTimeString()} | IP: {alert.ip_address}
+                              <Clock size={12}/> {new Date(alert.timestamp).toLocaleTimeString()} | IP: {alert.ip_address} | {alert.location || 'Unknown'}
                             </div>
                           </div>
                           <div className={`cyber-badge ${alert.severity}`}>

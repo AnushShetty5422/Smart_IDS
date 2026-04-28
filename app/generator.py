@@ -10,22 +10,35 @@ USERS = ["admin", "john.doe", "alice.smith", "guest", "service_account"]
 LOCATIONS = ["USA", "India", "UK", "Germany", "Japan"]
 QUERY_TYPES = ["SELECT", "INSERT", "UPDATE", "DELETE", "DROP"]
 
+def get_random_ip(is_external=False):
+    import ipaddress
+    if is_external:
+        while True:
+            ip = f"{random.randint(1, 223)}.{random.randint(0, 255)}.{random.randint(0, 255)}.{random.randint(0, 255)}"
+            if not ipaddress.ip_address(ip).is_private and not ipaddress.ip_address(ip).is_loopback:
+                return ip
+    return f"192.168.1.{random.randint(1, 255)}"
+
 def generate_normal_log():
+    is_external = random.random() < 0.2
     return {
         "username": random.choice(USERS),
-        "ip_address": f"192.168.1.{random.randint(1, 255)}",
+        "ip_address": get_random_ip(is_external),
         "timestamp": datetime.now().isoformat(),
         "query_count": random.randint(1, 50),
         "query_type": random.choice(["SELECT", "SELECT", "INSERT", "UPDATE"]),
         "failed_logins": random.choices([0, 1, 2], weights=[0.8, 0.15, 0.05])[0],
         "download_size_mb": round(random.uniform(0.1, 5.0), 2),
-        "location": random.choice(LOCATIONS),
+        "location": "Pending...", # Will be resolved by backend
         "privilege_change": False,
         "target_table": random.choice(["users", "inventory", "transactions", "public_data"])
     }
 
 def generate_attack_log(attack_type):
     log = generate_normal_log()
+    # Attacks have an 80% chance of coming from outside
+    log["ip_address"] = get_random_ip(is_external=(random.random() < 0.8))
+    
     if attack_type == "brute_force":
         log["failed_logins"] = random.randint(5, 20)
     elif attack_type == "data_exfiltration":

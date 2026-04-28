@@ -7,8 +7,28 @@ from app.models import LogEntry
 from app.engine import DetectionEngine
 from app.ai_analyzer import generate_threat_report
 from app.database import DBLogEntry, DBAlert, get_db, SessionLocal
+import ipaddress
+import requests
+from functools import lru_cache
 
 app = FastAPI(title="Smart IDS API", version="2.0.0")
+
+@lru_cache(maxsize=100)
+def get_ip_location(ip_str):
+    try:
+        ip = ipaddress.ip_address(ip_str)
+        if ip.is_private or ip.is_loopback:
+            return "Local Network"
+        
+        # Free API for geolocation
+        response = requests.get(f"http://ip-api.com/json/{ip_str}", timeout=2)
+        if response.status_code == 200:
+            data = response.json()
+            if data.get("status") == "success":
+                return f"{data.get('country')}, {data.get('city')}"
+    except Exception as e:
+        pass
+    return "Unknown External"
 
 # Enable CORS for the React frontend
 app.add_middleware(
@@ -48,6 +68,10 @@ def read_root():
 
 @app.post("/api/logs/ingest")
 def ingest_log(log: LogEntry, background_tasks: BackgroundTasks, db: Session = Depends(get_db)):
+    # Calculate real location based on IP
+    actual_location = get_ip_location(log.ip_address)
+    log.location = actual_location
+    
     # 1. Save Log to Persistent Database
     db_log = DBLogEntry(
         username=log.username,
@@ -88,6 +112,7 @@ def get_alerts(db: Session = Depends(get_db)):
             "timestamp": a.timestamp,
             "username": a.username,
             "ip_address": a.ip_address,
+            "location": get_ip_location(a.ip_address),
             "risk_score": a.risk_score,
             "severity": a.severity,
             "rule_alerts": json.loads(a.rule_alerts) if a.rule_alerts else [],
